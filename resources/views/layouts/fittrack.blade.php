@@ -28,6 +28,9 @@
                 <a href="{{ route('products.index') }}" class="ft-nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}">
                     <i class="bi bi-box-seam"></i> Products
                 </a>
+                <a href="{{ route('suppliers.index') }}" class="ft-nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
+                    <i class="bi bi-truck"></i> Suppliers
+                </a>
                 <a href="{{ route('transactions.index') }}" class="ft-nav-link {{ request()->routeIs('transactions.*', 'adjustments.*') ? 'active' : '' }}">
                     <i class="bi bi-arrow-left-right"></i> Transactions
                 </a>

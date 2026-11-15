@@ -8,6 +8,7 @@ use App\Http\Controllers\InventoryTransactionController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\Api\InventoryApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('products', ProductController::class);
+
+    // suppliers (restore must come before the resource)
+    Route::patch('/suppliers/{id}/restore', [SupplierController::class, 'restore'])->name('suppliers.restore');
+    Route::resource('suppliers', SupplierController::class);
 
     // stock movements (no edit/update: audit trail)
     Route::resource('transactions', InventoryTransactionController::class)->except(['edit', 'update']);
