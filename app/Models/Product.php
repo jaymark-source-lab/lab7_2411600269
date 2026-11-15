@@ -25,6 +25,9 @@ class Product extends Model
 
     // the most recent stock movement
     public function latestTransaction()
+
+
+    
     {
         return $this->hasOne(InventoryTransaction::class)->latestOfMany();
     }
@@ -34,7 +37,20 @@ class Product extends Model
     {
         return $this->quantity <= $this->reorder_level;
     }
+    // suppliers that sell this product (pivot holds the agreed price)
+   
+    public function suppliers()
+    {
+        return $this->belongsToMany(Supplier::class)
+            ->withPivot(['unit_cost', 'minimum_order_quantity', 'is_preferred'])
+            ->withTimestamps();
+    }
 
+    // the supplier used for automatic reorders
+    public function preferredSupplier(): ?Supplier
+    {
+        return $this->suppliers()->wherePivot('is_preferred', true)->first();
+    }
     // nothing left
     public function isOutOfStock(): bool
     {
