@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
+use App\Services\SupplierPerformanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -49,6 +50,30 @@ class SupplierController extends Controller
             ->withQueryString();
 
         return view('suppliers.index', compact('suppliers', 'status'));
+    }
+
+    // supplier performance report
+    public function performance(SupplierPerformanceService $service)
+    {
+        $suppliers = $service->report();
+        $rated = $suppliers->whereNotNull('score')->values();
+
+        $summary = [
+            'suppliers' => $rated->count(),
+            'on_time'   => $rated->avg('on_time_rate'),
+            'accuracy'  => $rated->avg('accuracy'),
+            'avg_days'  => $rated->avg('avg_days'),
+            'avg_lead'  => $rated->avg('lead_time'),
+            'value'     => $suppliers->sum('total_value'),
+        ];
+
+        return view('suppliers.performance', [
+            'suppliers' => $suppliers,
+            'top'       => $rated->take(3),
+            'bottom'    => $rated->count() > 3 ? $rated->reverse()->take(3)->values() : collect(),
+            'trend'     => $service->trend(),
+            'summary'   => $summary,
+        ]);
     }
 
     // show the add form

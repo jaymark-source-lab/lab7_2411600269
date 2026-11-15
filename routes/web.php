@@ -37,6 +37,7 @@ Route::middleware('auth')->group(function () {
 
     // suppliers (restore must come before the resource)
     Route::patch('/suppliers/{id}/restore', [SupplierController::class, 'restore'])->name('suppliers.restore');
+    Route::get('/suppliers/performance', [SupplierController::class, 'performance'])->name('suppliers.performance');
     Route::resource('suppliers', SupplierController::class);
 
     // purchase orders + workflow actions

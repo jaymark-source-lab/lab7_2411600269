@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\PurchaseOrder;
 use App\Services\ProcurementStats;
+use App\Services\SupplierPerformanceService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -37,6 +38,9 @@ class ViewServiceProvider extends ServiceProvider
         });
 
         // clear cached supplier stats whenever an order changes
-        PurchaseOrder::saved(fn () => Cache::forget(ProcurementStats::CACHE_KEY));
+        PurchaseOrder::saved(function () {
+            Cache::forget(ProcurementStats::CACHE_KEY);
+            Cache::forget(SupplierPerformanceService::CACHE_KEY);
+        });
     }
 }
