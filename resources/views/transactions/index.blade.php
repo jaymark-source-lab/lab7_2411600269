@@ -16,9 +16,11 @@
         <h4 class="fw-bold mb-0">Stock Transactions</h4>
         <div class="d-flex gap-2">
             @can('admin')
-                <a href="{{ route('adjustments.create') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-clipboard-check"></i> Stock Adjustment
-                </a>
+                @if (Route::has('adjustments.create'))
+                    <a href="{{ route('adjustments.create') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-sliders"></i> Stock Adjustment
+                    </a>
+                @endif
             @endcan
             <a href="{{ route('transactions.create') }}" class="btn ft-btn-primary">
                 <i class="bi bi-plus-lg"></i> Record Transaction
@@ -31,38 +33,13 @@
         <div class="alert alert-danger">{{ $errors->first() }}</div>
     @endif
 
-    <form method="GET" action="{{ route('transactions.index') }}" class="ft-filter-bar">
-        <div class="ft-filter-group">
-            <label for="product_id">Product</label>
-            <select name="product_id" id="product_id" class="form-select">
-                <option value="">All products</option>
-                @foreach ($products as $product)
-                    <option value="{{ $product->id }}" @selected(request('product_id') == $product->id)>{{ $product->name }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="ft-filter-group">
-            <label for="type">Type</label>
-            <select name="type" id="type" class="form-select">
-                <option value="">All types</option>
-                @foreach ($types as $value => $label)
-                    <option value="{{ $value }}" @selected(request('type') === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="ft-filter-group">
-            <label for="from">From</label>
-            <input type="date" name="from" id="from" class="form-control" value="{{ request('from') }}">
-        </div>
-        <div class="ft-filter-group">
-            <label for="to">To</label>
-            <input type="date" name="to" id="to" class="form-control" value="{{ request('to') }}">
-        </div>
-        <div class="ft-filter-group">
-            <button type="submit" class="btn ft-btn-primary">Filter</button>
-            <a href="{{ route('transactions.index') }}" class="btn btn-light">Reset</a>
-        </div>
-    </form>
+    <x-filters.bar :action="route('transactions.index')" :count="$transactions->total()">
+        <x-filters.search placeholder="Product, SKU or reference" />
+        <x-filters.select name="product_id" label="Product" :options="$products" placeholder="All products" />
+        <x-filters.select name="type" label="Type" :options="$types" placeholder="All types" />
+        <x-filters.select name="user_id" label="Recorded By" :options="$users" placeholder="Anyone" />
+        <x-filters.date-range />
+    </x-filters.bar>
 
     <div class="ft-panel">
         <div class="table-responsive">
@@ -89,15 +66,15 @@
                                 <div class="small text-muted">{{ $transaction->product->sku }}</div>
                             </td>
                             <td>
-                                <span class="ft-badge {{ $badges[$transaction->type] }}">
-                                    {{ $types[$transaction->type] }}
+                                <span class="ft-badge {{ $badges[$transaction->type] ?? '' }}">
+                                    {{ $types[$transaction->type] ?? $transaction->type }}
                                 </span>
                             </td>
                             <td class="text-end fw-semibold {{ $transaction->quantity > 0 ? 'text-success' : 'text-danger' }}">
                                 {{ $transaction->quantity > 0 ? '+' : '' }}{{ $transaction->quantity }}
                             </td>
-                            <td>{{ $transaction->reference_number ?: '—' }}</td>
-                            <td>{{ $transaction->user->name }}</td>
+                            <td>{{ $transaction->reference_number ?: '-' }}</td>
+                            <td>{{ $transaction->user?->name ?? 'System' }}</td>
                             <td class="text-end">
                                 <a href="{{ route('transactions.show', $transaction) }}" class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-eye"></i>
@@ -114,7 +91,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">No transactions found.</td>
+                            <td colspan="7" class="text-center text-muted py-4">No transactions match your filters.</td>
                         </tr>
                     @endforelse
                 </tbody>

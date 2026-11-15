@@ -10,28 +10,13 @@
         </a>
     </div>
 
-    <form method="GET" action="{{ route('products.index') }}" class="ft-filter-bar">
-        <div class="ft-filter-group">
-            <label for="category">Category</label>
-            <select name="category" id="category" class="form-select" onchange="this.form.submit()">
-                <option value="">All</option>
-                @foreach ($categories as $category)
-                    <option value="{{ $category }}" @selected(request('category') === $category)>{{ $category }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="ft-filter-group flex-grow-1">
-            <label for="search">Search</label>
-            <div class="ft-search-wrap">
-                <i class="bi bi-search"></i>
-                <input type="text" name="search" id="search" class="form-control" value="{{ request('search') }}" placeholder="Search by product name...">
-            </div>
-        </div>
-        <div class="ft-filter-group">
-            <button type="submit" class="btn ft-btn-primary">Filter</button>
-            <a href="{{ route('products.index') }}" class="btn btn-light">Reset</a>
-        </div>
-    </form>
+    <x-filters.bar :action="route('products.index')" :count="$products->total()">
+        <x-filters.search placeholder="Name, SKU, category or supplier" />
+        <x-filters.select name="category" label="Category" :options="$categories" placeholder="All categories" />
+        <x-filters.select name="supplier_id" label="Supplier" :options="$suppliers" placeholder="All suppliers" />
+        <x-filters.select name="stock" label="Stock" :options="$stockStatuses" placeholder="Any stock" />
+        <x-filters.select name="sort" label="Sort by" :options="$sorts" />
+    </x-filters.bar>
 
     <div class="ft-panel">
         <div class="table-responsive">

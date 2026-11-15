@@ -19,38 +19,14 @@ use Illuminate\Validation\ValidationException;
 
 class PurchaseOrderController extends Controller
 {
-    // list orders with filters
-    public function index(Request $request)
+    // list purchase orders using the search service
+    public function index(\Illuminate\Http\Request $request, \App\Services\SearchService $search)
     {
-        $this->authorize('viewAny', PurchaseOrder::class);
+        $orders = $search->purchaseOrders($request->only(['search', 'status', 'supplier_id', 'source', 'from', 'to']))
+            ->paginate(10)
+            ->withQueryString();
 
-        $query = PurchaseOrder::with(['supplier', 'createdBy'])->withCount('items');
-
-        if ($request->filled('status')) {
-            $query->byStatus($request->status);
-        }
-
-        if ($request->filled('supplier_id')) {
-            $query->where('supplier_id', $request->supplier_id);
-        }
-
-        if ($request->filled('from')) {
-            $query->whereDate('order_date', '>=', $request->from);
-        }
-
-        if ($request->filled('to')) {
-            $query->whereDate('order_date', '<=', $request->to);
-        }
-
-        if ($request->filled('search')) {
-            $query->where('reference_number', 'like', '%' . $request->search . '%');
-        }
-
-        $orders = $query->latest('order_date')->latest('id')->paginate(15)->withQueryString();
-        $suppliers = Supplier::withTrashed()->orderBy('name')->get(['id', 'name']);
-        $statuses = PurchaseOrder::STATUSES;
-
-        return view('purchase-orders.index', compact('orders', 'suppliers', 'statuses'));
+        return view('purchase-orders.index', ['orders' => $orders] + $search->purchaseOrderOptions());
     }
 
     // new order form

@@ -180,4 +180,29 @@ class PurchaseOrder extends Model
             default                => 'bg-light text-secondary',
         };
     }
+
+    // PurchaseOrder::search('PO-2026') - reference number or supplier name
+    public function scopeSearch($query, string $term)
+    {
+        $like = '%' . $term . '%';
+
+        return $query->where(function ($q) use ($like) {
+            $q->where('reference_number', 'like', $like)
+              ->orWhereHas('supplier', fn ($s) => $s->where('name', 'like', $like));
+        });
+    }
+
+    // PurchaseOrder::forSupplier(3)
+    public function scopeForSupplier($query, $supplierId)
+    {
+        return $query->where('supplier_id', $supplierId);
+    }
+
+    // PurchaseOrder::orderedBetween('2026-11-01', '2026-11-30') - either date can be empty
+    public function scopeOrderedBetween($query, ?string $from, ?string $to)
+    {
+        return $query
+            ->when($from, fn ($q) => $q->whereDate('order_date', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('order_date', '<=', $to));
+    }
 }

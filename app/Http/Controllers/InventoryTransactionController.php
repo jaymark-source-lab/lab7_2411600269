@@ -12,32 +12,14 @@ use Illuminate\Validation\Rule;
 
 class InventoryTransactionController extends Controller
 {
-    // list transactions with filters
-    public function index(Request $request)
+    // list transactions using the search service
+    public function index(\Illuminate\Http\Request $request, \App\Services\SearchService $search)
     {
-        $query = InventoryTransaction::with(['product', 'user'])->recent();
+        $transactions = $search->transactions($request->only(['search', 'product_id', 'type', 'user_id', 'from', 'to']))
+            ->paginate(15)
+            ->withQueryString();
 
-        if ($request->filled('product_id')) {
-            $query->where('product_id', $request->product_id);
-        }
-
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-
-        if ($request->filled('from')) {
-            $query->whereDate('created_at', '>=', $request->from);
-        }
-
-        if ($request->filled('to')) {
-            $query->whereDate('created_at', '<=', $request->to);
-        }
-
-        $transactions = $query->paginate(20)->withQueryString();
-        $products = Product::orderBy('name')->get(['id', 'name', 'sku']);
-        $types = InventoryTransaction::TYPES;
-
-        return view('transactions.index', compact('transactions', 'products', 'types'));
+        return view('transactions.index', ['transactions' => $transactions] + $search->transactionOptions());
     }
 
     // show the record-transaction form

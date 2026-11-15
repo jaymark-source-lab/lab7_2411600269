@@ -7,23 +7,14 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    // list products with category filter and search
-    public function index(Request $request)
+    // list products using the search service
+    public function index(\Illuminate\Http\Request $request, \App\Services\SearchService $search)
     {
-        $query = Product::query();
+        $products = $search->products($request->only(['search', 'category', 'supplier_id', 'stock', 'sort']))
+            ->paginate(10)
+            ->withQueryString();
 
-        if ($request->filled('category')) {
-            $query->where('category', $request->category);
-        }
-
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
-        }
-
-        $products = $query->orderBy('name')->paginate(10);
-        $categories = Product::select('category')->distinct()->pluck('category');
-
-        return view('products.index', compact('products', 'categories'));
+        return view('products.index', ['products' => $products] + $search->productOptions());
     }
 
     // show the add form

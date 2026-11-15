@@ -94,4 +94,34 @@ class Product extends Model
     {
         return $query->where('category', $category);
     }
+
+    // Product::search('whey') - name, SKU, category or supplier name
+    public function scopeSearch($query, string $term)
+    {
+        $like = '%' . $term . '%';
+
+        return $query->where(function ($q) use ($like) {
+            $q->where('name', 'like', $like)
+              ->orWhere('sku', 'like', $like)
+              ->orWhere('category', 'like', $like)
+              ->orWhereHas('suppliers', fn ($s) => $s->where('name', 'like', $like));
+        });
+    }
+
+    // Product::fromSupplier(3) - products sold by a supplier
+    public function scopeFromSupplier($query, $supplierId)
+    {
+        return $query->whereHas('suppliers', fn ($s) => $s->where('suppliers.id', $supplierId));
+    }
+
+    // Product::stockStatus('low') - in, low or out of stock
+    public function scopeStockStatus($query, string $status)
+    {
+        return match ($status) {
+            'out'   => $query->where('quantity', '<=', 0),
+            'low'   => $query->where('quantity', '>', 0)->whereColumn('quantity', '<=', 'reorder_level'),
+            'in'    => $query->whereColumn('quantity', '>', 'reorder_level'),
+            default => $query,
+        };
+    }
 }
