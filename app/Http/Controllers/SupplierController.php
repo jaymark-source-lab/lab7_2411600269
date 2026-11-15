@@ -70,7 +70,7 @@ class SupplierController extends Controller
         return view('suppliers.performance', [
             'suppliers' => $suppliers,
             'top'       => $rated->take(3),
-            'bottom'    => $rated->count() > 3 ? $rated->reverse()->take(3)->values() : collect(),
+            'bottom'    => $rated->where('score', '<', 75)->sortBy('score')->values(),
             'trend'     => $service->trend(),
             'summary'   => $summary,
         ]);

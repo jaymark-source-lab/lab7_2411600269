@@ -88,7 +88,7 @@
                         <span class="ft-badge {{ $ratingBadge[$row['rating']] }}">{{ $row['score'] }}</span>
                     </div>
                 @empty
-                    <p class="small text-muted mb-0">Needs more than 3 rated suppliers.</p>
+                    <p class="small text-muted mb-0">All suppliers score 75 or higher.</p>
                 @endforelse
             </div>
         </div>
@@ -163,6 +163,7 @@
                     data: trend.map(m => m.received),
                     backgroundColor: '#14a3ad',
                     yAxisID: 'y',
+                    order: 1,
                 },
                 {
                     type: 'line',
@@ -173,6 +174,8 @@
                     tension: 0.3,
                     spanGaps: true,
                     yAxisID: 'y1',
+                    order: 0,
+                    pointRadius: 6,
                 },
             ],
         },
