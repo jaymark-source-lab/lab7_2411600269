@@ -4,7 +4,7 @@
 
 @section('content')
     <h4 class="fw-bold mb-1">Good {{ now()->hour < 12 ? 'morning' : (now()->hour < 18 ? 'afternoon' : 'evening') }}, {{ auth()->user()->name ?? 'Admin' }}!</h4>
-    <p class="text-muted mb-4">Here's your inventory and fitness summary for today.</p>
+    <p class="text-muted mb-4">Here's your inventory, procurement and fitness summary for today.</p>
 
     {{-- ================= Inventory (live) ================= --}}
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
@@ -15,13 +15,12 @@
         </div>
     </div>
 
-    {{-- Inventory stat cards --}}
     <div class="row g-3">
         <div class="col-6 col-lg-3">
             <div class="ft-stat-card">
                 <div class="ft-stat-icon teal"><i class="bi bi-box-seam"></i></div>
                 <div class="ft-stat-label">Total Products</div>
-                <div class="ft-stat-value" id="inv-total-products">—</div>
+                <div class="ft-stat-value" id="inv-total-products">&mdash;</div>
                 <div class="ft-stat-delta" id="inv-total-units"></div>
             </div>
         </div>
@@ -29,27 +28,26 @@
             <div class="ft-stat-card">
                 <div class="ft-stat-icon orange"><i class="bi bi-exclamation-triangle"></i></div>
                 <div class="ft-stat-label">Low Stock Items</div>
-                <div class="ft-stat-value" id="inv-low-stock">—</div>
+                <div class="ft-stat-value" id="inv-low-stock">&mdash;</div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
             <div class="ft-stat-card">
                 <div class="ft-stat-icon purple"><i class="bi bi-x-octagon"></i></div>
                 <div class="ft-stat-label">Out of Stock</div>
-                <div class="ft-stat-value" id="inv-out-of-stock">—</div>
+                <div class="ft-stat-value" id="inv-out-of-stock">&mdash;</div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
             <div class="ft-stat-card">
                 <div class="ft-stat-icon teal-light"><i class="bi bi-cash-stack"></i></div>
                 <div class="ft-stat-label">Inventory Value</div>
-                <div class="ft-stat-value" id="inv-value">—</div>
+                <div class="ft-stat-value" id="inv-value">&mdash;</div>
                 <div class="ft-stat-delta" id="inv-transactions-today"></div>
             </div>
         </div>
     </div>
 
-    {{-- Low stock alerts + recent transactions --}}
     <div class="row g-3 mt-1">
         <div class="col-lg-5">
             <div class="ft-panel">
@@ -88,10 +86,19 @@
         </div>
     </div>
 
+    {{-- ================= Procurement (View Composer widgets) ================= --}}
+    <h5 class="fw-bold mt-5 mb-3"><i class="bi bi-receipt"></i> Procurement Overview</h5>
+
+    <div class="row g-3">
+        <div class="col-lg-4">@include('widgets.pending-orders')</div>
+        <div class="col-lg-8">@include('widgets.recent-orders')</div>
+        <div class="col-lg-6">@include('widgets.supplier-performance')</div>
+        <div class="col-lg-6">@include('widgets.reorder-alerts')</div>
+    </div>
+
     {{-- ================= Fitness ================= --}}
     <h5 class="fw-bold mt-5 mb-3"><i class="bi bi-activity"></i> Fitness Summary</h5>
 
-    {{-- Stat cards --}}
     <div class="row g-3">
         <div class="col-6 col-lg-3">
             <div class="ft-stat-card">
@@ -123,7 +130,6 @@
         </div>
     </div>
 
-    {{-- Missed workouts alert --}}
     <div class="ft-alert-banner" id="missed-alert" style="{{ $missedWorkouts->isEmpty() ? 'display:none;' : '' }}">
         <i class="bi bi-exclamation-triangle-fill"></i>
         <div>
@@ -136,7 +142,6 @@
         </div>
     </div>
 
-    {{-- Charts --}}
     <div class="row g-3 mt-1">
         <div class="col-lg-7">
             <div class="ft-panel">
@@ -152,7 +157,6 @@
         </div>
     </div>
 
-    {{-- Filters --}}
     <div class="ft-filter-bar mt-4">
         <div class="ft-filter-group">
             <label for="filter-type">Workout Type</label>
@@ -185,7 +189,6 @@
         </div>
     </div>
 
-    {{-- Recent activity table --}}
     <div class="ft-panel">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
             <div class="ft-panel-title mb-0"><i class="bi bi-clock-history"></i> Recent Activity</div>
@@ -211,9 +214,7 @@
                         <th></th>
                     </tr>
                 </thead>
-                <tbody id="activity-table-body">
-                    {{-- Rendered client-side by fittrack-dashboard.js --}}
-                </tbody>
+                <tbody id="activity-table-body"></tbody>
             </table>
             <p class="text-muted text-center py-3 d-none" id="no-results">No workouts match your filters.</p>
         </div>
@@ -231,6 +232,21 @@
             lowStock: @json(route('api.products.lowStock')),
             recent: @json(route('api.transactions.recent')),
         };
+
+        // refresh the pending-approval widget every 60 seconds
+        setInterval(async () => {
+            try {
+                const response = await fetch(@json(route('api.dashboard.pendingOrders')), { headers: { Accept: 'application/json' } });
+                if (!response.ok) return;
+
+                const data = await response.json();
+                document.getElementById('widget-pending-count').textContent = data.count;
+                document.getElementById('widget-pending-value').textContent =
+                    '$' + data.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            } catch (error) {
+                // keep the last value on screen
+            }
+        }, 60000);
     </script>
     <script src="{{ asset('js/fittrack-dashboard.js') }}"></script>
     <script src="{{ asset('js/inventory-dashboard.js') }}"></script>

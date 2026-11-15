@@ -11,6 +11,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\Api\InventoryApiController;
+use App\Http\Controllers\Api\ProcurementApiController;
 use App\Mail\LowStockAlert;
 use App\Mail\PurchaseOrderApproved;
 use App\Mail\PurchaseOrderCreated;
@@ -73,7 +74,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
 
-    // low stock notifications
+    // notifications
     Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.readAll');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'read'])->name('notifications.read');
 
@@ -83,6 +84,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/products/low-stock', [InventoryApiController::class, 'lowStock'])->name('products.lowStock');
         Route::get('/products/{product}', [InventoryApiController::class, 'product'])->whereNumber('product')->name('products.show');
         Route::get('/transactions/recent', [InventoryApiController::class, 'recentTransactions'])->name('transactions.recent');
+
+        // procurement widgets
+        Route::get('/dashboard/pending-orders', [ProcurementApiController::class, 'pendingOrders'])->name('dashboard.pendingOrders');
+        Route::get('/dashboard/recent-orders', [ProcurementApiController::class, 'recentOrders'])->name('dashboard.recentOrders');
+        Route::get('/dashboard/supplier-performance', [ProcurementApiController::class, 'supplierPerformance'])->name('dashboard.supplierPerformance');
+        Route::get('/dashboard/reorder-alerts', [ProcurementApiController::class, 'reorderAlerts'])->name('dashboard.reorderAlerts');
     });
 
     Route::resource('workouts', WorkoutController::class);

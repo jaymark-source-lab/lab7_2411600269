@@ -137,7 +137,7 @@ class ReorderService
     }
 
     // the active preferred supplier for a product
-    private function preferredSupplier(Product $product): ?Supplier
+    public function preferredSupplier(Product $product): ?Supplier
     {
         return $product->suppliers->first(
             fn (Supplier $supplier) => $supplier->pivot->is_preferred && $supplier->is_active
