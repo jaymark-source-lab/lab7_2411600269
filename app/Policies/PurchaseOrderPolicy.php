@@ -26,15 +26,16 @@ class PurchaseOrderPolicy
     }
 
     // drafts only, by the creator or an admin
+    // drafts only: the creator, an admin, or a manager for auto-generated drafts
     public function update(User $user, PurchaseOrder $order): bool
     {
-        return $order->isEditable() && ($user->isAdmin() || $this->isCreator($user, $order));
-    }
+        if (! $order->isEditable()) {
+            return false;
+        }
 
-    // drafts only, admin only
-    public function delete(User $user, PurchaseOrder $order): bool
-    {
-        return $order->isEditable() && $user->isAdmin();
+        return $user->isAdmin()
+            || $this->isCreator($user, $order)
+            || ($order->is_auto_generated && $user->hasRole('manager'));
     }
 
     // send a draft for approval (same people who can edit it)
