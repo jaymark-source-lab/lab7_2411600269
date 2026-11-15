@@ -65,12 +65,26 @@ class SupplierController extends Controller
         return redirect()->route('suppliers.index')->with('success', 'Supplier added successfully.');
     }
 
-    // supplier details with the products they sell
+    // supplier details, products, recent orders and performance
     public function show(Supplier $supplier)
     {
         $supplier->load(['products' => fn ($q) => $q->orderBy('name')]);
 
-        return view('suppliers.show', compact('supplier'));
+        $recentOrders = $supplier->purchaseOrders()
+            ->latest('order_date')
+            ->latest('id')
+            ->take(5)
+            ->get();
+
+        $stats = [
+            'total_orders' => $supplier->purchaseOrders()->count(),
+            'open_orders'  => $supplier->purchaseOrders()->active()->count(),
+            'received'     => $supplier->purchaseOrders()->byStatus('received')->count(),
+            'total_value'  => (float) $supplier->purchaseOrders()->byStatus('received')->sum('total'),
+            'on_time'      => $supplier->performance_rating,
+        ];
+
+        return view('suppliers.show', compact('supplier', 'recentOrders', 'stats'));
     }
 
     // show the edit form
@@ -87,10 +101,14 @@ class SupplierController extends Controller
         return redirect()->route('suppliers.show', $supplier)->with('success', 'Supplier updated successfully.');
     }
 
-    // soft delete (admin only)
+    // soft delete (admin only, blocked while orders are open)
     public function destroy(Supplier $supplier)
     {
         Gate::authorize('admin');
+
+        if ($supplier->purchaseOrders()->active()->exists()) {
+            return back()->with('error', "{$supplier->name} still has open purchase orders. Receive or cancel them first.");
+        }
 
         $supplier->delete();
 
