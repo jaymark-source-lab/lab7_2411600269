@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PurchaseOrderApproved;
+use App\Mail\PurchaseOrderCreated;
+use App\Mail\PurchaseOrderSent;
 use App\Models\InventoryTransaction;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -156,10 +162,10 @@ class PurchaseOrderController extends Controller
 
         $this->markSubmitted($purchaseOrder);
 
-        return back()->with('success', 'Submitted for approval.');
+        return back()->with('success', 'Submitted for approval. Approvers were notified by email.');
     }
 
-    // pending -> approved
+    // pending -> approved, then email the creator
     public function approve(Request $request, PurchaseOrder $purchaseOrder)
     {
         $this->authorize('approve', $purchaseOrder);
@@ -171,7 +177,9 @@ class PurchaseOrderController extends Controller
         ]);
         $purchaseOrder->log('approved', 'Approved by ' . $request->user()->name . '.');
 
-        return back()->with('success', "{$purchaseOrder->reference_number} approved.");
+        Mail::to($purchaseOrder->createdBy)->send(new PurchaseOrderApproved($purchaseOrder));
+
+        return back()->with('success', "{$purchaseOrder->reference_number} approved. {$purchaseOrder->createdBy->name} was notified by email.");
     }
 
     // pending -> rejected (reason required)
@@ -192,15 +200,17 @@ class PurchaseOrderController extends Controller
         return back()->with('success', "{$purchaseOrder->reference_number} rejected.");
     }
 
-    // approved -> sent to supplier
+    // approved -> sent, and email the order to the supplier
     public function send(PurchaseOrder $purchaseOrder)
     {
         $this->authorize('send', $purchaseOrder);
 
         $purchaseOrder->update(['status' => 'sent', 'sent_at' => now()]);
-        $purchaseOrder->log('sent', 'Sent to ' . $purchaseOrder->supplier->email . '.');
+        $purchaseOrder->log('sent', 'Emailed to ' . $purchaseOrder->supplier->email . '.');
 
-        return back()->with('success', "{$purchaseOrder->reference_number} marked as sent to {$purchaseOrder->supplier->name}.");
+        Mail::to($purchaseOrder->supplier->email)->send(new PurchaseOrderSent($purchaseOrder));
+
+        return back()->with('success', "{$purchaseOrder->reference_number} emailed to {$purchaseOrder->supplier->name}.");
     }
 
     // record delivered quantities and add them to stock
@@ -316,16 +326,26 @@ class PurchaseOrderController extends Controller
             'supplier_id'            => $data['supplier_id'],
             'order_date'             => $data['order_date'],
             'expected_delivery_date' => $data['expected_delivery_date']
-                ?? now()->parse($data['order_date'])->addDays($supplier->lead_time_days)->toDateString(),
+                ?? Carbon::parse($data['order_date'])->addDays($supplier->lead_time_days)->toDateString(),
             'notes'                  => $data['notes'] ?? null,
             'terms'                  => $data['terms'] ?? $supplier->payment_terms,
         ];
     }
 
-    // draft -> pending + history entry
+    // draft -> pending + history entry + email approvers
     private function markSubmitted(PurchaseOrder $order): void
     {
         $order->update(['status' => 'pending']);
         $order->log('submitted', 'Submitted for approval.');
+
+        // managers and admins, except the person submitting
+        $approvers = User::whereIn('role', ['admin', 'manager'])
+            ->where('id', '!=', auth()->id())
+            ->get();
+
+        // only email once the database transaction is saved
+        if ($approvers->isNotEmpty()) {
+            DB::afterCommit(fn () => Mail::to($approvers)->send(new PurchaseOrderCreated($order)));
+        }
     }
 }
