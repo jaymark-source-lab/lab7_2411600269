@@ -86,7 +86,7 @@ class PurchaseOrder extends Model
     // approval history (polymorphic)
     public function activities()
     {
-        return $this->morphMany(ActivityLog::class, 'subject')->latest();
+        return $this->morphMany(ActivityLog::class, 'subject')->latest('id');
     }
 
     // orders waiting for approval
