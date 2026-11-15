@@ -25,7 +25,7 @@
         @endcan
     </div>
 
-    <x-filters.bar :action="route('purchase-orders.index')" :count="$orders->total()">
+    <x-filters.bar :action="route('purchase-orders.index')" :count="$orders->total()" export="purchase-orders">
         <x-filters.search placeholder="Reference or supplier" />
         <x-filters.select name="status" label="Status" :options="$statuses" placeholder="All statuses" />
         <x-filters.select name="supplier_id" label="Supplier" :options="$suppliers" placeholder="All suppliers" />
@@ -70,8 +70,13 @@
                             <td class="text-end fw-semibold">${{ number_format($order->total, 2) }}</td>
                             <td><span class="ft-badge {{ $badges[$order->status] ?? '' }}">{{ ucfirst($order->status) }}</span></td>
                             <td class="small">{{ $order->createdBy?->name ?? 'System' }}</td>
-                            <td class="text-end">
-                                <a href="{{ route('purchase-orders.show', $order) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                            <td class="text-end text-nowrap">
+                                <a href="{{ route('purchase-orders.pdf', $order) }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="PDF">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                </a>
+                                <a href="{{ route('purchase-orders.show', $order) }}" class="btn btn-sm btn-outline-secondary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
                             </td>
                         </tr>
                     @empty

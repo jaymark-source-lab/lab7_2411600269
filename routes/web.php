@@ -10,6 +10,7 @@ use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\Api\InventoryApiController;
 use App\Http\Controllers\Api\ProcurementApiController;
 use App\Mail\LowStockAlert;
@@ -35,7 +36,7 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('products', ProductController::class);
 
-    // suppliers (restore must come before the resource)
+    // suppliers (restore and performance must come before the resource)
     Route::patch('/suppliers/{id}/restore', [SupplierController::class, 'restore'])->name('suppliers.restore');
     Route::get('/suppliers/performance', [SupplierController::class, 'performance'])->name('suppliers.performance');
     Route::resource('suppliers', SupplierController::class);
@@ -48,6 +49,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/purchase-orders/{purchase_order}/send', [PurchaseOrderController::class, 'send'])->name('purchase-orders.send');
     Route::post('/purchase-orders/{purchase_order}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
     Route::post('/purchase-orders/{purchase_order}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
+
+    // CSV / PDF exports and the printable purchase order
+    Route::get('/exports/{report}/{format}', [ExportController::class, 'download'])
+        ->whereIn('report', ['products', 'purchase-orders', 'transactions', 'supplier-performance'])
+        ->whereIn('format', ['csv', 'pdf'])
+        ->name('exports.download');
+    Route::get('/purchase-orders/{purchaseOrder}/pdf', [ExportController::class, 'purchaseOrder'])->name('purchase-orders.pdf');
 
     // preview emails in the browser (local development only)
     if (app()->isLocal()) {

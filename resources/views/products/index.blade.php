@@ -10,7 +10,7 @@
         </a>
     </div>
 
-    <x-filters.bar :action="route('products.index')" :count="$products->total()">
+    <x-filters.bar :action="route('products.index')" export="products" :count="$products->total()">
         <x-filters.search placeholder="Name, SKU, category or supplier" />
         <x-filters.select name="category" label="Category" :options="$categories" placeholder="All categories" />
         <x-filters.select name="supplier_id" label="Supplier" :options="$suppliers" placeholder="All suppliers" />

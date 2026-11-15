@@ -16,11 +16,9 @@
         <h4 class="fw-bold mb-0">Stock Transactions</h4>
         <div class="d-flex gap-2">
             @can('admin')
-                @if (Route::has('adjustments.create'))
-                    <a href="{{ route('adjustments.create') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-sliders"></i> Stock Adjustment
-                    </a>
-                @endif
+                <a href="{{ route('adjustments.create') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-sliders"></i> Stock Adjustment
+                </a>
             @endcan
             <a href="{{ route('transactions.create') }}" class="btn ft-btn-primary">
                 <i class="bi bi-plus-lg"></i> Record Transaction
@@ -33,7 +31,7 @@
         <div class="alert alert-danger">{{ $errors->first() }}</div>
     @endif
 
-    <x-filters.bar :action="route('transactions.index')" :count="$transactions->total()">
+    <x-filters.bar :action="route('transactions.index')" :count="$transactions->total()" export="transactions">
         <x-filters.search placeholder="Product, SKU or reference" />
         <x-filters.select name="product_id" label="Product" :options="$products" placeholder="All products" />
         <x-filters.select name="type" label="Type" :options="$types" placeholder="All types" />

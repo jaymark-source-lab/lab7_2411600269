@@ -19,7 +19,10 @@
             <h4 class="fw-bold mb-0">Supplier Performance Report</h4>
             <div class="small text-muted">Score = 60% on-time delivery + 40% order accuracy &middot; updated every 10 minutes or when an order changes</div>
         </div>
-        <a href="{{ route('suppliers.index') }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Suppliers</a>
+        <div class="d-flex gap-2">
+            <x-export-buttons report="supplier-performance" />
+            <a href="{{ route('suppliers.index') }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Suppliers</a>
+        </div>
     </div>
 
     {{-- summary --}}

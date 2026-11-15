@@ -1,4 +1,4 @@
-@props(['action', 'count' => null])
+@props(['action', 'count' => null, 'export' => null])
 
 @php
     // filters in use (page and sort don't count)
@@ -11,6 +11,11 @@
         <button type="submit" class="btn ft-btn-primary"><i class="bi bi-funnel"></i> Filter</button>
         <a href="{{ $action }}" class="btn btn-light">Reset</a>
     </div>
+    @if ($export)
+        <div class="ft-filter-group ms-auto">
+            <x-export-buttons :report="$export" />
+        </div>
+    @endif
 </form>
 
 @if ($count !== null)
