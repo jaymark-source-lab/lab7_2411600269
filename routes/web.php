@@ -9,6 +9,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\Api\InventoryApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,15 @@ Route::middleware('auth')->group(function () {
     // suppliers (restore must come before the resource)
     Route::patch('/suppliers/{id}/restore', [SupplierController::class, 'restore'])->name('suppliers.restore');
     Route::resource('suppliers', SupplierController::class);
+
+    // purchase orders + workflow actions
+    Route::resource('purchase-orders', PurchaseOrderController::class);
+    Route::post('/purchase-orders/{purchase_order}/submit', [PurchaseOrderController::class, 'submit'])->name('purchase-orders.submit');
+    Route::post('/purchase-orders/{purchase_order}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
+    Route::post('/purchase-orders/{purchase_order}/reject', [PurchaseOrderController::class, 'reject'])->name('purchase-orders.reject');
+    Route::post('/purchase-orders/{purchase_order}/send', [PurchaseOrderController::class, 'send'])->name('purchase-orders.send');
+    Route::post('/purchase-orders/{purchase_order}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
+    Route::post('/purchase-orders/{purchase_order}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
 
     // stock movements (no edit/update: audit trail)
     Route::resource('transactions', InventoryTransactionController::class)->except(['edit', 'update']);
