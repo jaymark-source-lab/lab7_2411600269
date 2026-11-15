@@ -31,6 +31,9 @@
                 <a href="{{ route('suppliers.index') }}" class="ft-nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
                     <i class="bi bi-truck"></i> Suppliers
                 </a>
+                <a href="{{ route('purchase-orders.index') }}" class="ft-nav-link {{ request()->routeIs('purchase-orders.*') ? 'active' : '' }}">
+                    <i class="bi bi-receipt"></i> Purchase Orders
+                </a>
                 <a href="{{ route('transactions.index') }}" class="ft-nav-link {{ request()->routeIs('transactions.*', 'adjustments.*') ? 'active' : '' }}">
                     <i class="bi bi-arrow-left-right"></i> Transactions
                 </a>
@@ -122,6 +125,13 @@
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
+                @if (session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ session('error') }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
