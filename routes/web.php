@@ -11,6 +11,12 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\Api\InventoryApiController;
+use App\Mail\LowStockAlert;
+use App\Mail\PurchaseOrderApproved;
+use App\Mail\PurchaseOrderCreated;
+use App\Mail\PurchaseOrderSent;
+use App\Models\Product;
+use App\Models\PurchaseOrder;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -40,6 +46,21 @@ Route::middleware('auth')->group(function () {
     Route::post('/purchase-orders/{purchase_order}/send', [PurchaseOrderController::class, 'send'])->name('purchase-orders.send');
     Route::post('/purchase-orders/{purchase_order}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
     Route::post('/purchase-orders/{purchase_order}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
+
+    // preview emails in the browser (local development only)
+    if (app()->isLocal()) {
+        Route::get('/mail-preview/{type}', function (string $type) {
+            $order = PurchaseOrder::with(['supplier', 'items.product', 'createdBy', 'approvedBy'])->latest('id')->firstOrFail();
+
+            return match ($type) {
+                'created'   => new PurchaseOrderCreated($order),
+                'approved'  => new PurchaseOrderApproved($order),
+                'sent'      => new PurchaseOrderSent($order),
+                'low-stock' => new LowStockAlert(Product::lowStock()->firstOrFail()),
+                default     => abort(404),
+            };
+        })->name('mail.preview');
+    }
 
     // stock movements (no edit/update: audit trail)
     Route::resource('transactions', InventoryTransactionController::class)->except(['edit', 'update']);

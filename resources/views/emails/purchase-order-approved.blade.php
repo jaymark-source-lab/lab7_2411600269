@@ -1,4 +1,4 @@
-@extends('emails.layout')
+﻿@extends('emails.layout')
 
 @section('title', 'Purchase order approved')
 @section('tag', 'Approved')
@@ -9,8 +9,7 @@
         Good news! Your purchase order <strong style="color:#085054;">{{ $order->reference_number }}</strong>
         to <strong>{{ $order->supplier->name }}</strong> was
         <span style="color:#1f9d55; font-weight:bold;">approved</span>
-        by {{ $order->approvedBy?->name ?? 'a manager' }}
-        on {{ $order->approved_at?->format('M j, Y g:i A') }}.
+        by {{ $order->approvedBy?->name ?? 'a manager' }}@if ($order->approved_at) on {{ $order->approved_at->format('M j, Y g:i A') }}@endif.
     </p>
     <p>
         Order total: <strong>${{ number_format($order->total, 2) }}</strong><br>
